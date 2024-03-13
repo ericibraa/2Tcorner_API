@@ -6,6 +6,22 @@ from typing_extensions import Annotated
 from src.helper.py_object_id import PydanticObjectId
 
 
+class Merk(BaseModel):
+    id : PydanticObjectId = Field(default=False,alias="_id")
+    name: str
+
+class Category(BaseModel):
+    id : PydanticObjectId = Field(default=False,alias="_id")
+    name: str
+
+class Type(BaseModel):
+    id : PydanticObjectId = Field(default=False,alias="_id")
+    name: str
+
+class Location(BaseModel):
+    id : PydanticObjectId = Field(default=False,alias="_id")
+    name: str
+
 class Price(BaseModel):
     discount:Optional[float] = 0
     current:float
@@ -13,13 +29,20 @@ class Price(BaseModel):
 
     
 class Product(BaseModel):
-    id : PydanticObjectId = Field(alias="_id")
+    id : PydanticObjectId = Field(default=False,alias="_id")
     name: str
-    sap_code: str
-    brand: PydanticObjectId
+    merk: PydanticObjectId
+    type: PydanticObjectId
+    category: PydanticObjectId
+    location: PydanticObjectId
     image : List[str]
+    sku: str
     price : Optional[Price] =None
-    brand_detail: Optional[Brand] =None
+    engine: str
+    capacity: str
+    year: str
+    grade: str
+    km_of_use: str
 
     model_config = ConfigDict(populate_by_name = True)
 
