@@ -35,3 +35,12 @@ async def deleteLocations(
     db: AsyncIOMotorDatabase = Depends(getDB)):
     
     return await service.deleteOneLocation(db=db,id=id)
+
+
+@router.put("/{id}")
+async def UpdateLocation(
+    id : str,
+    location : Location,
+    db: AsyncIOMotorDatabase = Depends(getDB)):
+    
+    return await service.updateOneLocation(db=db,id=id,data=location)
