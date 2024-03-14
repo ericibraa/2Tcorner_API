@@ -36,3 +36,13 @@ async def deleteCategory(
     db: AsyncIOMotorDatabase = Depends(getDB)):
     
     return await service.deleteOneCategory(db=db,id=id)
+
+
+
+@router.put("/{id}")
+async def UpdateCategory(
+    id : str,
+    category : Category,
+    db: AsyncIOMotorDatabase = Depends(getDB)):
+    
+    return await service.updateOneCategory(db=db,id=id,data=category)

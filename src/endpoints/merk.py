@@ -37,9 +37,6 @@ async def deleteMerk(
     
     return await service.deleteOneMerks(db=db,id=id)
 
-
-
-
 @router.put("/{id}")
 async def UpdateMerk(
     id : str,
