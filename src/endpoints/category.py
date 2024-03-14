@@ -30,7 +30,7 @@ async def createCategory(
 
 
 
-@router.post("/delete/{id}")
+@router.delete("/{id}")
 async def deleteCategory(
     id : str,
     db: AsyncIOMotorDatabase = Depends(getDB)):

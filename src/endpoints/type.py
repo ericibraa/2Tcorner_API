@@ -29,9 +29,17 @@ async def createType(
 
 
 
-@router.post("/delete/{id}")
+@router.delete("/{id}")
 async def deleteType(
     id : str,
     db: AsyncIOMotorDatabase = Depends(getDB)):
     
     return await service.deleteOneType(db=db,id=id)
+
+@router.put("/{id}")
+async def UpdateType(
+    id : str,
+    type : Type,
+    db: AsyncIOMotorDatabase = Depends(getDB)):
+    
+    return await service.updateOneType(db=db,id=id,data=type)

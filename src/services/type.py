@@ -39,3 +39,16 @@ async def deleteOneType(db : AsyncIOMotorDatabase, id : ObjectId ):
     res = await db.type.delete_one({"_id": ObjectId(id)})
     print(str(res.raw_result))
     return str(res.raw_result)
+
+
+async def updateOneType(db : AsyncIOMotorDatabase, id : ObjectId ,data=Type):
+    try:
+        data = jsonable_encoder(data)
+        if data.get('_id') == 'False':
+            data.pop('_id')
+        print(data)
+        res = await db.type.replace_one({"_id": ObjectId(id)},data)
+        print(res.modified_count)
+        return ("replaced %s document" % res.modified_count)
+    except Exception as e:
+        print(e)

@@ -26,16 +26,35 @@ async def getAllMerks(db : AsyncIOMotorDatabase, query : QueryParameter ) -> Pag
     return PaginationResponse(message="Merk", status=200, data = res, pagination=Pagination(total_records=total_records, current_page=query.page))
 
 async def addOneMerks(db : AsyncIOMotorDatabase, data : Merk )-> Merk:
-    data = jsonable_encoder(data)
-    if data.get('_id'):
-        data['_id'] = ObjectId()
-        # data.pop('_id')
-    res = await db.merk.insert_one(data)
-    print(res)
-    return str(res.inserted_id)
+    try:
+        data = jsonable_encoder(data)
+        if data.get('_id'):
+            data['_id'] = ObjectId()
+            # data.pop('_id')
+        res = await db.merk.insert_one(data)
+        print(res)
+        return ("document %s has been created" % str(res.inserted_id))
+    except Exception as e:
+        print(e)
 
 
 async def deleteOneMerks(db : AsyncIOMotorDatabase, id : ObjectId ):
-    res = await db.merk.delete_one({"_id": ObjectId(id)})
-    print(str(res.raw_result))
-    return str(res.raw_result)
+    try:
+        res = await db.merk.delete_one({"_id": ObjectId(id)})
+        print(str(res.raw_result))
+        return str(res.raw_result)
+    except Exception as e:
+        print(e)
+
+
+async def updateOneMerk(db : AsyncIOMotorDatabase, id : ObjectId ,data=Merk):
+    try:
+        data = jsonable_encoder(data)
+        if data.get('_id') == 'False':
+            data.pop('_id')
+        print(data)
+        res = await db.merk.replace_one({"_id": ObjectId(id)},data)
+        print(res.modified_count)
+        return ("replaced %s document" % res.modified_count)
+    except Exception as e:
+        print(e)

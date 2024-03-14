@@ -29,7 +29,7 @@ async def createLocations(
 
 
 
-@router.post("/delete/{id}")
+@router.delete("/{id}")
 async def deleteLocations(
     id : str,
     db: AsyncIOMotorDatabase = Depends(getDB)):

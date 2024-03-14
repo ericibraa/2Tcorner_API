@@ -30,9 +30,20 @@ async def createMerk(
 
 
 
-@router.post("/delete/{id}")
+@router.delete("/{id}")
 async def deleteMerk(
     id : str,
     db: AsyncIOMotorDatabase = Depends(getDB)):
     
     return await service.deleteOneMerks(db=db,id=id)
+
+
+
+
+@router.put("/{id}")
+async def UpdateMerk(
+    id : str,
+    merk : Merk,
+    db: AsyncIOMotorDatabase = Depends(getDB)):
+    
+    return await service.updateOneMerk(db=db,id=id,data=merk)

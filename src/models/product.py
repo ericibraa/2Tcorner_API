@@ -9,6 +9,7 @@ from src.helper.py_object_id import PydanticObjectId
 class Merk(BaseModel):
     id : PydanticObjectId = Field(default=False,alias="_id")
     name: str
+    url : str
 
 class Category(BaseModel):
     id : PydanticObjectId = Field(default=False,alias="_id")
