@@ -1,22 +1,23 @@
 from fastapi import Body, Depends, Request, HTTPException, status
-from typing  import List, Union
+from typing  import List, Union, Annotated
 from pydantic import EmailStr
 from fastapi.encoders import jsonable_encoder
 from config.config import get_configs
 from src.database.mongo import getDB
-from src.models.user import User, TokenData
+from src.models.user import User, TokenData, UserForm
 from src.models.response_model import LoginResponse
 from src.models.query_paramater import QueryParameter
-from motor.motor_asyncio import  AsyncIOMotorDatabase
-from src.helper.user_security import verify_password, create_access_token
+from motor.core import AgnosticDatabase
+from src.helper.user_security import verify_password, create_access_token, get_password_hash
 from bson import ObjectId
-from jose import JWTError, jwt
+import jwt
+from jwt.exceptions import InvalidTokenError 
 from fastapi.security import OAuth2PasswordBearer
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token", )
 
 
-async def getAllUser(db:AsyncIOMotorDatabase, query : QueryParameter ) -> List[User]:
+async def getAllUser(db : AgnosticDatabase, query : QueryParameter ) -> List[User]:
     match = {}
     skip = 0
     if query.search :
@@ -32,8 +33,8 @@ async def getAllUser(db:AsyncIOMotorDatabase, query : QueryParameter ) -> List[U
     print(users)
     return users
 
-async def getUserByEmail(db:AsyncIOMotorDatabase, email: EmailStr)->Union[User, None]:
-    user = await db.wa_user_admin.find_one({"email":email})
+async def getUserByEmail(db:AgnosticDatabase, email: EmailStr)->Union[User, None]:
+    user = await db.user.find_one({"email":email})
     if user:
         print(type(user))
 
@@ -41,24 +42,24 @@ async def getUserByEmail(db:AsyncIOMotorDatabase, email: EmailStr)->Union[User, 
     else:
         return None
     
-async def getToken(db:AsyncIOMotorDatabase, email: EmailStr , password :str)->LoginResponse:
+async def getToken(db:AgnosticDatabase, email: EmailStr , password :str)->LoginResponse:
     user = await getUserByEmail(db=db, email=email)
     if not user:
         raise HTTPException(status_code=401, detail="Could not validate credentials")
     else:
         if not verify_password(password, user.password):
              raise HTTPException(status_code=401, detail="Could not validate credentials")
-        else: 
-            payloadData = {
-                "email":user.email,
-                "id":str(user.id)
-            }
-            token = create_access_token(data=payloadData )
-            print(token)
-            return LoginResponse(access_token=token, token_type="bearer")
+    
+        payloadData = {
+            "email":user.email,
+            "id":str(user.id)
+        }
+        token = create_access_token(data=payloadData )
+        print(token)
+        return LoginResponse(access_token=token, token_type="bearer")
 
 
-async def getCurrentUser(db :AsyncIOMotorDatabase = Depends(getDB), token: str = Depends(oauth2_scheme))-> User:
+async def getCurrentUser(db : AgnosticDatabase = Depends(getDB), token: str = Depends(oauth2_scheme))-> User:
     print(token)
     config = get_configs()
     print(config)
@@ -77,9 +78,25 @@ async def getCurrentUser(db :AsyncIOMotorDatabase = Depends(getDB), token: str =
         if email is None:
             raise credentials_exception
         token_data = TokenData(id=id, email=email)
-    except JWTError:
+    except InvalidTokenError:
         raise credentials_exception
     user = await getUserByEmail(db, token_data.email)
     if user is None:
         raise credentials_exception
     return user
+
+
+async def create_user( db : AgnosticDatabase ,user:UserForm ,):
+    print(user)
+    password = get_password_hash(password=user.password)
+    try:
+        await db.user.insert_one({"email":user.email, "password":password,"name":user.name })
+        return True
+    except Exception as e:
+        print(e)
+        raise HTTPException(
+             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="server error",
+            
+        )
+    

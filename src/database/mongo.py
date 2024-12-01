@@ -1,7 +1,7 @@
-from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
+from motor.motor_asyncio import AsyncIOMotorClient
+from motor.core import AgnosticDatabase
 from config.config import get_configs
 from beanie import init_beanie
-from src.models.user import User
 from fastapi import FastAPI, Request
 
 async def init_mongo(app: FastAPI):
@@ -14,5 +14,5 @@ async def close_mongo(app:FastAPI):
     app.mongo_client.close()
 
 
-async def getDB(request:Request)-> AsyncIOMotorDatabase:
+async def getDB(request:Request)-> AgnosticDatabase:
     return request.app.mongo

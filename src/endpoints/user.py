@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Body, Request, status, Query, Depends
 from typing import List, Union
-from src.models.user import User, LoginData
+from src.models.user import User, LoginData, UserForm
 from src.models.query_paramater import QueryParameter
-from motor.motor_asyncio import  AsyncIOMotorDatabase
+
+from motor.core import AgnosticDatabase
 from src.database.mongo import getDB
 from src.models.response_model import LoginResponse
 from typing_extensions import Annotated
@@ -10,9 +11,9 @@ import src.services.user as userService
 
 router = APIRouter(prefix="/users", tags=["User"])
 
-@router.get("/", response_description="List Users", response_model=List[User])
+@router.get("", response_description="List Users", response_model=List[User])
 async def getUsers(
-    db: AsyncIOMotorDatabase = Depends(getDB),
+    db: AgnosticDatabase = Depends(getDB),
     limit :Union[int, None] = Query(default=None),
     page :Union[int, None]= Query(default=None),
     search : Union[str, None] = Query(default=None)
@@ -25,7 +26,7 @@ async def getUsers(
 @router.post("/token", response_description="Get Token", response_model=LoginResponse)
 async def getToken(
     login_data : LoginData,
-    db: AsyncIOMotorDatabase = Depends(getDB)
+    db: AgnosticDatabase = Depends(getDB)
 ):
     print(login_data)
     
@@ -34,3 +35,8 @@ async def getToken(
 @router.get("/me", response_description="Get User", response_model=User)
 async def getUser(user: Annotated[User, Depends(userService.getCurrentUser)]):
     return user
+
+@router.post("", response_description="Create User")
+async def createUser(user: UserForm, db : Annotated[ AgnosticDatabase, Depends(getDB)]):
+    if await userService.create_user(user= user, db=db):
+        return {"message":"Success"} 

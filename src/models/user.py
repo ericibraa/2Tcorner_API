@@ -15,6 +15,11 @@ class User(BaseModel):
     model_config = ConfigDict(populate_by_name = True)
 
 
+class UserForm(BaseModel):
+    name:str
+    password:str
+    email:EmailStr
+
 class LoginData(BaseModel):
     email : EmailStr
     password :str
@@ -22,3 +27,7 @@ class LoginData(BaseModel):
 class TokenData(BaseModel):
     email : EmailStr
     id : str
+
+class Token(BaseModel):
+    access_token :str
+    token_type: str
