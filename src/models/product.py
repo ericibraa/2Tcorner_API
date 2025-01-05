@@ -9,7 +9,7 @@ from src.helper.py_object_id import PydanticObjectId
 class Merk(BaseModel):
     id : PydanticObjectId = Field(default=False,alias="_id")
     name: str
-    url : str
+    url : Optional[str] = None
 
 class Category(BaseModel):
     id : PydanticObjectId = Field(default=False,alias="_id")
@@ -24,26 +24,29 @@ class Location(BaseModel):
     name: str
 
 class Price(BaseModel):
-    discount:Optional[float] = 0
     current:float
     normal:float
 
+class MerkDetail(BaseModel):
+    id: str = Field(..., alias="_id")
+    name: str
+    url: str
     
 class Product(BaseModel):
     id : PydanticObjectId = Field(default=False,alias="_id")
     name: str
     merk: PydanticObjectId
+    merk_details: Optional[MerkDetail] = None 
     type: PydanticObjectId
-    category: PydanticObjectId
-    location: PydanticObjectId
+    category: str
+    location: str
     image : List[str]
-    sku: str
-    price : Optional[Price] =None
-    engine: str
-    capacity: str
+    sku_code: str
+    price : Optional[Price] = None
+    cc: str
     year: str
     grade: str
     km_of_use: str
 
-    model_config = ConfigDict(populate_by_name = True)
+    # model_config = ConfigDict(populate_by_name = True)
 

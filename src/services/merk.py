@@ -47,14 +47,25 @@ async def deleteOneMerks(db : AsyncIOMotorDatabase, id : ObjectId ):
         print(e)
 
 
-async def updateOneMerk(db : AsyncIOMotorDatabase, id : ObjectId ,data=Merk):
+async def updateOneMerk(db: AsyncIOMotorDatabase, id: ObjectId, data: Merk):
     try:
-        data = jsonable_encoder(data)
-        if data.get('_id') == 'False':
-            data.pop('_id')
-        print(data)
-        res = await db.merk.replace_one({"_id": ObjectId(id)},data)
-        print(res.modified_count)
-        return ("replaced %s document" % res.modified_count)
+        existing_merk = await db.merk.find_one({"_id": id})
+        
+        if not existing_merk:
+            raise HTTPException(status_code=404, detail="Merk not found")
+        
+        data_dict = data.dict(exclude_unset=True) 
+
+        result = await db.merk.update_one({"_id": id}, {"$set": data_dict})
+
+        if result.modified_count == 0:
+            raise HTTPException(status_code=400, detail="No changes were made to the merk.")
+        
+        updated_merk = await db.merk.find_one({"_id": id})
+        
+        updated_merk["_id"] = str(updated_merk["_id"])
+        
+        return updated_merk
     except Exception as e:
-        print(e)
+        print(f"Error updating merk: {str(e)}") 
+        raise Exception(f"An error occurred while updating the merk: {str(e)}")

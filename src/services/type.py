@@ -43,12 +43,23 @@ async def deleteOneType(db : AsyncIOMotorDatabase, id : ObjectId ):
 
 async def updateOneType(db : AsyncIOMotorDatabase, id : ObjectId ,data=Type):
     try:
-        data = jsonable_encoder(data)
-        if data.get('_id') == 'False':
-            data.pop('_id')
-        print(data)
-        res = await db.type.replace_one({"_id": ObjectId(id)},data)
-        print(res.modified_count)
-        return ("replaced %s document" % res.modified_count)
+        existing_type = await db.type.find_one({"_id": id})
+        
+        if not existing_type:
+            raise HTTPException(status_code=404, detail="Type not found")
+        
+        data_dict = data.dict(exclude_unset=True) 
+
+        result = await db.type.update_one({"_id": id}, {"$set": data_dict})
+
+        if result.modified_count == 0:
+            raise HTTPException(status_code=400, detail="No changes were made to the type.")
+        
+        updated_type = await db.type.find_one({"_id": id})
+        
+        updated_type["_id"] = str(updated_type["_id"])
+        
+        return updated_type
     except Exception as e:
-        print(e)
+        print(f"Error updating type: {str(e)}") 
+        raise Exception(f"An error occurred while updating the type: {str(e)}")

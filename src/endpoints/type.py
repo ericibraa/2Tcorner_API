@@ -1,4 +1,4 @@
-from fastapi import APIRouter,Query, Depends
+from fastapi import APIRouter, HTTPException,Query, Depends
 from typing import List, Union
 from src.models.product import Type
 from src.models.query_paramater import QueryParameter
@@ -6,6 +6,7 @@ from motor.motor_asyncio import  AsyncIOMotorDatabase
 from src.database.mongo import getDB
 from src.models.response_model import PaginationResponse
 import src.services.type as service
+from bson import ObjectId
 
 router = APIRouter(prefix="/type", tags=["Type"])
 
@@ -19,6 +20,25 @@ async def getType(
     query = QueryParameter(search=search, limit=limit, page=page )
     
     return await service.getAllType(db=db, query= query)
+
+@router.get("/{id}", response_model=Type)
+async def getTypeDetail(
+    id: str,
+    db: AsyncIOMotorDatabase = Depends(getDB)
+):
+    # Convert the string id to ObjectId
+    object_id = ObjectId(id)
+    
+    # Fetch the merk document by its ID
+    type = await db.type.find_one({"_id": object_id})
+    
+    if not type:
+        raise HTTPException(status_code=404, detail="Type not found")
+    
+    # Convert _id to string before returning (Optional)
+    type["_id"] = str(type["_id"])
+    
+    return type
 
 @router.post("/")
 async def createType(
@@ -40,6 +60,15 @@ async def deleteType(
 async def UpdateType(
     id : str,
     type : Type,
-    db: AsyncIOMotorDatabase = Depends(getDB)):
+    db: AsyncIOMotorDatabase = Depends(getDB)): # type: ignore
     
-    return await service.updateOneType(db=db,id=id,data=type)
+    # Convert the string id to ObjectId
+    object_id = ObjectId(id)
+    
+    # Call the service to update the merk
+    updated_merk = await service.updateOneType(db=db, id=object_id, data=type)
+    
+    if updated_merk is None:
+        raise HTTPException(status_code=404, detail="Type not found")
+    
+    return updated_merk
