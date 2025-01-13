@@ -31,6 +31,10 @@ class MerkDetail(BaseModel):
     id: str = Field(..., alias="_id")
     name: str
     url: str
+
+class TypeDetail(BaseModel):
+    id: str = Field(..., alias="_id")
+    name: str
     
 class Product(BaseModel):
     id : PydanticObjectId = Field(default=False,alias="_id")
@@ -38,6 +42,7 @@ class Product(BaseModel):
     merk: PydanticObjectId
     merk_details: Optional[MerkDetail] = None 
     type: PydanticObjectId
+    type_details: Optional[TypeDetail] = None
     category: str
     location: str
     image : List[str]
@@ -47,6 +52,22 @@ class Product(BaseModel):
     year: str
     grade: str
     km_of_use: str
+    description: Optional[str] = None
+
+class ProductForm(BaseModel):
+    name: str
+    merk: str
+    type: str
+    category: str
+    location: str
+    image : List[str]
+    sku_code: str
+    price : Optional[Price] = None
+    cc: str
+    year: str
+    grade: str
+    km_of_use: str
+    description: str
 
     # model_config = ConfigDict(populate_by_name = True)
 

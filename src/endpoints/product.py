@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException,Query, Depends
 from typing import List, Union
-from src.models.product import Product
+from src.models.product import Product, ProductForm
 from src.models.query_paramater import QueryParameter
 from motor.motor_asyncio import  AsyncIOMotorDatabase
 from src.database.mongo import getDB
@@ -33,7 +33,7 @@ async def getProductDetail(
 ):
     object_id = ObjectId(id)
     
-    product = await db.product.find_one({"_id": object_id})
+    product = await service.getDetailProduct(db=db, id=object_id)
     
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
@@ -44,7 +44,7 @@ async def getProductDetail(
 
 @router.post("/")
 async def createProduct(
-    product : Product,
+    product : ProductForm,
     db: AsyncIOMotorDatabase = Depends(getDB)):
     
     return await service.addOneProduct(db=db,data=product)

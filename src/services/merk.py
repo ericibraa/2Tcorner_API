@@ -33,9 +33,10 @@ async def addOneMerks(db : AsyncIOMotorDatabase, data : Merk )-> Merk:
             # data.pop('_id')
         res = await db.merk.insert_one(data)
         print(res)
-        return ("document %s has been created" % str(res.inserted_id))
+        return {"message":"success"}
     except Exception as e:
         print(e)
+        raise Exception(f"An error occurred while creating the product: {str(e)}")
 
 
 async def deleteOneMerks(db : AsyncIOMotorDatabase, id : ObjectId ):

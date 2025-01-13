@@ -2,7 +2,7 @@ from fastapi import Body, Request, HTTPException, status
 from pydantic import TypeAdapter
 from typing  import List
 from fastapi.encoders import jsonable_encoder
-from src.models.product import Product
+from src.models.product import Product, ProductForm
 from src.models.query_paramater import QueryParameter
 from motor.motor_asyncio import  AsyncIOMotorDatabase
 from src.models.response_model import Pagination, PaginationResponse
@@ -33,26 +33,30 @@ async def getAllProducts(db: AsyncIOMotorDatabase, query: QueryParameter) -> Pag
         {"$match": match},
         {
             "$lookup": {
-                "from": "merk",  # The collection to join
-                "let": {"merk_id": "$merk"},  # Variable from the product document
-                "pipeline": [
-                    {
-                        "$match": {
-                            "$expr": {
-                                "$eq": [
-                                    {"$toObjectId": "$$merk_id"}, "$_id"
-                                ]
-                            }
-                        }
-                    }
-                ],
-                "as": "merk_details"  # The result will be placed in this field
+                "from": "merk",
+                'localField': 'merk',
+                "foreignField": '_id',
+                "as": "merk_details"
+            }
+        },
+         {
+            "$lookup": {
+                "from": "type",
+                'localField': 'type',
+                "foreignField": '_id',
+                "as": "type_details"
             }
         },
         {
             "$unwind": {
                 "path": "$merk_details",
-                "preserveNullAndEmptyArrays": True  # Keep products without merk details
+                "preserveNullAndEmptyArrays": True 
+            }
+        },
+        {
+            "$unwind": {
+                "path": "$type_details",
+                "preserveNullAndEmptyArrays": True 
             }
         },
         # Skip and limit for pagination
@@ -83,17 +87,62 @@ async def getAllProducts(db: AsyncIOMotorDatabase, query: QueryParameter) -> Pag
         )
     )
 
-async def addOneProduct(db : AsyncIOMotorDatabase, data : Product )-> Product:
+async def getDetailProduct(db: AsyncIOMotorDatabase, id: ObjectId):
+    pipeline = [
+         {"$match": {"_id": id}},
+        {
+            "$lookup": {
+                "from": "merk",
+                'localField': 'merk',
+                "foreignField": '_id',
+                "as": "merk_details"
+            }
+        },
+         {
+            "$lookup": {
+                "from": "type",
+                'localField': 'type',
+                "foreignField": '_id',
+                "as": "type_details"
+            }
+        },
+        {
+            "$unwind": {
+                "path": "$merk_details",
+                "preserveNullAndEmptyArrays": True 
+            }
+        },
+        {
+            "$unwind": {
+                "path": "$type_details",
+                "preserveNullAndEmptyArrays": True 
+            }
+        },
+    ]
+    products = await db.product.aggregate(pipeline).to_list(length=1)
+
+    if products:
+            return serialize_objectid(products[0])
+    return None
+
+
+async def addOneProduct(db : AsyncIOMotorDatabase, data : ProductForm )-> dict:
     try:
         data = jsonable_encoder(data)
-        if data.get('_id'):
-            data['_id'] = ObjectId()
-            # data.pop('_id')
+        data["_id"] = ObjectId()
+        if (data.get("merk")):
+            data["merk"] = ObjectId(data["merk"])
+
+        if (data.get("type")):
+            data["type"] = ObjectId(data["type"])
+
         res = await db.product.insert_one(data)
         print(res)
-        return ("document %s has been created" % str(res.inserted_id))
+        return {"message":"success"}
     except Exception as e:
         print(e)
+        raise Exception(f"An error occurred while creating the product: {str(e)}")
+
 
 async def updateOneProduct(db: AsyncIOMotorDatabase, id: ObjectId, data: Product):
     try:
@@ -109,7 +158,17 @@ async def updateOneProduct(db: AsyncIOMotorDatabase, id: ObjectId, data: Product
         if result.modified_count == 0:
             raise HTTPException(status_code=400, detail="No changes were made to the product.")
         
+        if (data.get("merk")):
+            data["merk"] = ObjectId(data["merk"])
+
+        if (data.get("type")):
+            data["type"] = ObjectId(data["type"])
+        
         updated_product = await db.product.find_one({"_id": id})
+
+        updated_product["merk"] = ObjectId(updated_product["merk"])
+
+        updated_product["type"] = ObjectId(updated_product["type"])
         
         updated_product["_id"] = str(updated_product["_id"])    
         
