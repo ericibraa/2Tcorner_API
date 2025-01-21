@@ -9,6 +9,7 @@ class Article(BaseModel):
     id : PydanticObjectId = Field(default=False,alias="_id")
     image: List[str] = None
     title: str
+    slug: Optional[str] = None
     short_desc : str
     description: str
     author: str

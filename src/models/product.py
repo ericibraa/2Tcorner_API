@@ -18,6 +18,7 @@ class Category(BaseModel):
 class Type(BaseModel):
     id : PydanticObjectId = Field(default=False,alias="_id")
     name: str
+    image : Optional[str] = None
 
 class Location(BaseModel):
     id : PydanticObjectId = Field(default=False,alias="_id")
@@ -39,6 +40,7 @@ class TypeDetail(BaseModel):
 class Product(BaseModel):
     id : PydanticObjectId = Field(default=False,alias="_id")
     name: str
+    slug: str
     merk: PydanticObjectId
     merk_details: Optional[MerkDetail] = None 
     type: PydanticObjectId
@@ -53,9 +55,11 @@ class Product(BaseModel):
     grade: str
     km_of_use: str
     description: Optional[str] = None
+    variant: str
 
 class ProductForm(BaseModel):
     name: str
+    slug: Optional[str] = None
     merk: str
     type: str
     category: str
@@ -68,6 +72,7 @@ class ProductForm(BaseModel):
     grade: str
     km_of_use: str
     description: str
+    variant: str
 
     # model_config = ConfigDict(populate_by_name = True)
 

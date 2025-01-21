@@ -1,5 +1,7 @@
 from fastapi import APIRouter, HTTPException,Query, Depends
 from typing import List, Union
+
+from slugify import slugify
 from src.models.article import Article
 from src.models.query_paramater import QueryParameter
 from motor.motor_asyncio import  AsyncIOMotorDatabase
@@ -22,14 +24,13 @@ async def getArticles(
     
     return await service.getAllArticles(db=db, query= query)
 
-@router.get("/{id}", response_model=Article)
+@router.get("/{slug}", response_model=Article)
 async def getArticleDetail(
-    id: str,
+    slug: str,
     db: AsyncIOMotorDatabase = Depends(getDB)
 ):
-    object_id = ObjectId(id)
     
-    article = await db.article.find_one({"_id": object_id})
+    article = await db.article.find_one({"slug": slug})
     
     if not article:
         raise HTTPException(status_code=404, detail="Article not found")
@@ -42,6 +43,10 @@ async def getArticleDetail(
 async def createArticle(
     article : Article,
     db: AsyncIOMotorDatabase = Depends(getDB)):
+
+    article_data = article.dict()
+    
+    article_data["slug"] = slugify(article.title) if not article.slug else article.slug
     
     return await service.createArticle(db=db,data=article)
 

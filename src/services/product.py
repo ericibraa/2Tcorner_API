@@ -18,14 +18,23 @@ def serialize_objectid(value):
     return value
 
 
-async def getAllProducts(db: AsyncIOMotorDatabase, query: QueryParameter) -> PaginationResponse:
+async def getAllProducts(db: AsyncIOMotorDatabase, query: QueryParameter) -> PaginationResponse: # type: ignore
     match = {}
     skip = 0
     if query.search:
         match["name"] = {"$regex": query.search, "$options": "i"}
+    if query.machine:
+        match["category"] = {"$regex": query.machine, "$options": "i"}
+    if query.cc:
+        match["cc"] = {"$regex": query.cc, "$options": "i"}    
+    if query.years:
+        match["year"] = {"$regex": query.years, "$options": "i"}
+    if query.grade:
+        match["grade"] = {"$regex": query.grade, "$options": "i"}
+    if query.type:
+        match["type"] = query.type
 
-    # Default values for pagination
-    page = query.page or 1
+    page = query.page or 1   
     limit = query.limit or 10
     skip = (page - 1) * limit
 
@@ -59,24 +68,18 @@ async def getAllProducts(db: AsyncIOMotorDatabase, query: QueryParameter) -> Pag
                 "preserveNullAndEmptyArrays": True 
             }
         },
-        # Skip and limit for pagination
         {"$skip": skip},
         {"$limit": limit}
     ]
 
-    # Perform the aggregation query
     products = await db.product.aggregate(pipeline).to_list(length=limit)
 
-    # Serialize ObjectIds to strings
     products = [{k: serialize_objectid(v) for k, v in product.items()} for product in products]
 
-    # Get total count (without the lookup or unwind, just match)
     total_records = await db.product.count_documents(match)
 
-    # Validate products after serialization
     list_product = TypeAdapter(List[Product]).validate_python(products)
 
-    # Return paginated response
     return PaginationResponse(
         message="Products",
         status=200,
@@ -87,9 +90,9 @@ async def getAllProducts(db: AsyncIOMotorDatabase, query: QueryParameter) -> Pag
         )
     )
 
-async def getDetailProduct(db: AsyncIOMotorDatabase, id: ObjectId):
+async def getDetailProduct(db: AsyncIOMotorDatabase, slug: str):  # type: ignore
     pipeline = [
-         {"$match": {"_id": id}},
+         {"$match": {"slug": slug}},
         {
             "$lookup": {
                 "from": "merk",
@@ -126,7 +129,7 @@ async def getDetailProduct(db: AsyncIOMotorDatabase, id: ObjectId):
     return None
 
 
-async def addOneProduct(db : AsyncIOMotorDatabase, data : ProductForm )-> dict:
+async def addOneProduct(db : AsyncIOMotorDatabase, data : ProductForm )-> dict:  # type: ignore
     try:
         data = jsonable_encoder(data)
         data["_id"] = ObjectId()
@@ -144,7 +147,7 @@ async def addOneProduct(db : AsyncIOMotorDatabase, data : ProductForm )-> dict:
         raise Exception(f"An error occurred while creating the product: {str(e)}")
 
 
-async def updateOneProduct(db: AsyncIOMotorDatabase, id: ObjectId, data: Product):
+async def updateOneProduct(db: AsyncIOMotorDatabase, id: ObjectId, data: Product):  # type: ignore
     try:
         existing_product = await db.product.find_one({"_id": id})
         
@@ -177,7 +180,7 @@ async def updateOneProduct(db: AsyncIOMotorDatabase, id: ObjectId, data: Product
         print(f"Error updating product: {str(e)}") 
         raise Exception(f"An error occurred while updating the product: {str(e)}")
 
-async def deleteOneProduct(db : AsyncIOMotorDatabase, id : ObjectId ):
+async def deleteOneProduct(db : AsyncIOMotorDatabase, id : ObjectId ):  # type: ignore
     try:
         res = await db.product.delete_one({"_id": ObjectId(id)})
         print(str(res.raw_result))

@@ -7,17 +7,24 @@ from src.database.mongo import getDB
 from src.models.response_model import PaginationResponse
 import src.services.product as service
 from bson import ObjectId
+from slugify import slugify
 
 router = APIRouter(prefix="/products", tags=["Products"])
 
 @router.get("/", response_description="List Products", response_model= PaginationResponse)
 async def getProducts(
-    db: AsyncIOMotorDatabase = Depends(getDB),
+    db: AsyncIOMotorDatabase = Depends(getDB), # type: ignore
     limit :Union[int, None] = Query(default=None),
     page :Union[int, None]= Query(default=None),
-    search : Union[str, None] = Query(default=None)
+    search : Union[str, None] = Query(default=None),
+    machine : Union[str, None] = Query(default=None),
+    cc : Union[str, None] = Query(default=None),
+    years : Union[str, None] = Query(default=None),
+    grade : Union[str, None] = Query(default=None),
+    type: Union[str, None] = Query(default=None),
 ):
-    query = QueryParameter(search=search, limit=limit, page=page )
+    
+    query = QueryParameter(search=search, limit=limit, page=page, machine=machine, cc=cc, years=years, grade=grade, type=type)
     
     products = await service.getAllProducts(db=db, query=query)
 
@@ -26,14 +33,13 @@ async def getProducts(
 
     return products
 
-@router.get("/{id}", response_model=Product)
+@router.get("/{slug}", response_model=Product)
 async def getProductDetail(
-    id: str,
-    db: AsyncIOMotorDatabase = Depends(getDB)
+    slug: str,
+    db: AsyncIOMotorDatabase = Depends(getDB) # type: ignore
 ):
-    object_id = ObjectId(id)
     
-    product = await service.getDetailProduct(db=db, id=object_id)
+    product = await service.getDetailProduct(db=db, slug=slug)
     
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
@@ -45,19 +51,27 @@ async def getProductDetail(
 @router.post("/")
 async def createProduct(
     product : ProductForm,
-    db: AsyncIOMotorDatabase = Depends(getDB)):
+    db: AsyncIOMotorDatabase = Depends(getDB)):  # type: ignore
+
+    product_data = product.dict()
     
-    return await service.addOneProduct(db=db,data=product)
+    product_data["slug"] = slugify(product.name) if not product.slug else product.slug
+    
+    return await service.addOneProduct(db=db,data=product_data)
 
 @router.put("/{id}", response_model=Product)
 async def updateProduct(
     id: str,
     product: Product,
-    db: AsyncIOMotorDatabase = Depends(getDB)
+    db: AsyncIOMotorDatabase = Depends(getDB)  # type: ignore
 ):
     object_id = ObjectId(id)
+    product_data = product.dict()
+
+    if "name" in product_data:
+        product_data["slug"] = slugify(product_data["name"])
     
-    update_product = await service.updateOneProduct(db=db, id=object_id, data=product)
+    update_product = await service.updateOneProduct(db=db, id=object_id, data=product_data)
     
     if update_product is None:
         raise HTTPException(status_code=404, detail="Product not found")
@@ -67,6 +81,6 @@ async def updateProduct(
 @router.delete("/{id}")
 async def deleteProduct(
     id : str,
-    db: AsyncIOMotorDatabase = Depends(getDB)):
+    db: AsyncIOMotorDatabase = Depends(getDB)):  # type: ignore
     
     return await service.deleteOneProduct(db=db,id=id)

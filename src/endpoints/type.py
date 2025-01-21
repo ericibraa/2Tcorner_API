@@ -12,7 +12,7 @@ router = APIRouter(prefix="/type", tags=["Type"])
 
 @router.get("/", response_description="List Type", response_model= PaginationResponse)
 async def getType(
-    db: AsyncIOMotorDatabase = Depends(getDB),
+    db: AsyncIOMotorDatabase = Depends(getDB),  # type: ignore
     limit :Union[int, None] = Query(default=None),
     page :Union[int, None]= Query(default=None),
     search : Union[str, None] = Query(default=None)
@@ -24,18 +24,15 @@ async def getType(
 @router.get("/{id}", response_model=Type)
 async def getTypeDetail(
     id: str,
-    db: AsyncIOMotorDatabase = Depends(getDB)
-):
-    # Convert the string id to ObjectId
+    db: AsyncIOMotorDatabase = Depends(getDB)):  # type: ignore
+
     object_id = ObjectId(id)
     
-    # Fetch the merk document by its ID
     type = await db.type.find_one({"_id": object_id})
     
     if not type:
         raise HTTPException(status_code=404, detail="Type not found")
     
-    # Convert _id to string before returning (Optional)
     type["_id"] = str(type["_id"])
     
     return type
@@ -43,7 +40,7 @@ async def getTypeDetail(
 @router.post("/")
 async def createType(
     type : Type,
-    db: AsyncIOMotorDatabase = Depends(getDB)):
+    db: AsyncIOMotorDatabase = Depends(getDB)):  # type: ignore
     
     return await service.addOneType(db=db,data=type)
 
@@ -52,7 +49,7 @@ async def createType(
 @router.delete("/{id}")
 async def deleteType(
     id : str,
-    db: AsyncIOMotorDatabase = Depends(getDB)):
+    db: AsyncIOMotorDatabase = Depends(getDB)):  # type: ignore
     
     return await service.deleteOneType(db=db,id=id)
 
@@ -60,12 +57,10 @@ async def deleteType(
 async def UpdateType(
     id : str,
     type : Type,
-    db: AsyncIOMotorDatabase = Depends(getDB)): # type: ignore
+    db: AsyncIOMotorDatabase = Depends(getDB)):  # type: ignore
     
-    # Convert the string id to ObjectId
     object_id = ObjectId(id)
     
-    # Call the service to update the merk
     updated_merk = await service.updateOneType(db=db, id=object_id, data=type)
     
     if updated_merk is None:
