@@ -19,6 +19,7 @@ origins = [
     "http://localhost",
     "http://localhost:8080",
     "http://localhost:3000",
+    "https://2tcorner/id"
 ]
 
 app.add_middleware(
