@@ -1,11 +1,13 @@
 from fastapi import APIRouter, HTTPException,Query, Depends
 from typing import List, Union
+from src.models.user import User
 from src.models.product import Product, ProductForm
 from src.models.query_paramater import QueryParameter
 from motor.motor_asyncio import  AsyncIOMotorDatabase
 from src.database.mongo import getDB
 from src.models.response_model import PaginationResponse
 import src.services.product as service
+import src.services.user as userService
 from bson import ObjectId
 from slugify import slugify
 
@@ -52,6 +54,7 @@ async def getProductDetail(
 async def createProduct(
     product : ProductForm,
     db: AsyncIOMotorDatabase = Depends(getDB)):  # type: ignore
+    current_user: User = Depends(userService.getCurrentUser),
 
     product_data = product.dict()
     
@@ -63,7 +66,8 @@ async def createProduct(
 async def updateProduct(
     id: str,
     product: Product,
-    db: AsyncIOMotorDatabase = Depends(getDB)  # type: ignore
+    db: AsyncIOMotorDatabase = Depends(getDB),  # type: ignore
+    current_user: User = Depends(userService.getCurrentUser),
 ):
     object_id = ObjectId(id)
     product_data = product.dict()
@@ -82,5 +86,6 @@ async def updateProduct(
 async def deleteProduct(
     id : str,
     db: AsyncIOMotorDatabase = Depends(getDB)):  # type: ignore
+    current_user: User = Depends(userService.getCurrentUser),
     
     return await service.deleteOneProduct(db=db,id=id)

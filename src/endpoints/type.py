@@ -7,6 +7,8 @@ from src.database.mongo import getDB
 from src.models.response_model import PaginationResponse
 import src.services.type as service
 from bson import ObjectId
+from src.models.user import User
+import src.services.user as userService
 
 router = APIRouter(prefix="/type", tags=["Type"])
 
@@ -41,6 +43,7 @@ async def getTypeDetail(
 async def createType(
     type : Type,
     db: AsyncIOMotorDatabase = Depends(getDB)):  # type: ignore
+    current_user: User = Depends(userService.getCurrentUser),
     
     return await service.addOneType(db=db,data=type)
 
@@ -50,6 +53,7 @@ async def createType(
 async def deleteType(
     id : str,
     db: AsyncIOMotorDatabase = Depends(getDB)):  # type: ignore
+    current_user: User = Depends(userService.getCurrentUser),
     
     return await service.deleteOneType(db=db,id=id)
 
@@ -58,6 +62,7 @@ async def UpdateType(
     id : str,
     type : Type,
     db: AsyncIOMotorDatabase = Depends(getDB)):  # type: ignore
+    current_user: User = Depends(userService.getCurrentUser),
     
     object_id = ObjectId(id)
     

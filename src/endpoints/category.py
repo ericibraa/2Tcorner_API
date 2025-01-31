@@ -6,6 +6,8 @@ from motor.motor_asyncio import  AsyncIOMotorDatabase
 from src.database.mongo import getDB
 from src.models.response_model import PaginationResponse
 import src.services.category as service
+from src.models.user import User
+import src.services.user as userService
 
 router = APIRouter(prefix="/category", tags=["Categories"])
 
@@ -25,6 +27,7 @@ async def getCategories(
 async def createCategory(
     category : Category,
     db: AsyncIOMotorDatabase = Depends(getDB)):
+    current_user: User = Depends(userService.getCurrentUser),
     
     return await service.addOneCategory(db=db,data=category)
 
@@ -34,6 +37,7 @@ async def createCategory(
 async def deleteCategory(
     id : str,
     db: AsyncIOMotorDatabase = Depends(getDB)):
+    current_user: User = Depends(userService.getCurrentUser),
     
     return await service.deleteOneCategory(db=db,id=id)
 
@@ -44,5 +48,6 @@ async def UpdateCategory(
     id : str,
     category : Category,
     db: AsyncIOMotorDatabase = Depends(getDB)):
+    current_user: User = Depends(userService.getCurrentUser),
     
     return await service.updateOneCategory(db=db,id=id,data=category)

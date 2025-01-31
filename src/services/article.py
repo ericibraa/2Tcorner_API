@@ -10,7 +10,7 @@ from bson import ObjectId
 
 
 async def getAllArticles(db : AsyncIOMotorDatabase, query : QueryParameter ) -> PaginationResponse:
-    match = {}
+    match = {"status": 10}
     skip = 0
     if query.search :
         match["title"] = query.search

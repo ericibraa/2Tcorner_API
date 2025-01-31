@@ -1,3 +1,4 @@
+from datetime import datetime 
 from fastapi import Body, Request, HTTPException, status
 from pydantic import TypeAdapter
 from typing  import List
@@ -7,6 +8,7 @@ from src.models.query_paramater import QueryParameter
 from motor.motor_asyncio import  AsyncIOMotorDatabase
 from src.models.response_model import Pagination, PaginationResponse
 from bson import ObjectId
+from urllib.parse import urlparse
 
 def serialize_objectid(value):
     if isinstance(value, ObjectId):
@@ -19,7 +21,7 @@ def serialize_objectid(value):
 
 
 async def getAllProducts(db: AsyncIOMotorDatabase, query: QueryParameter) -> PaginationResponse: # type: ignore
-    match = {}
+    match = {"status": 10}
     skip = 0
     if query.search:
         match["name"] = {"$regex": query.search, "$options": "i"}
@@ -57,6 +59,14 @@ async def getAllProducts(db: AsyncIOMotorDatabase, query: QueryParameter) -> Pag
             }
         },
         {
+            "$lookup": {
+                "from": "location",
+                'localField': 'location',
+                "foreignField": '_id',
+                "as": "location_details"
+            }
+        },
+        {
             "$unwind": {
                 "path": "$merk_details",
                 "preserveNullAndEmptyArrays": True 
@@ -65,6 +75,12 @@ async def getAllProducts(db: AsyncIOMotorDatabase, query: QueryParameter) -> Pag
         {
             "$unwind": {
                 "path": "$type_details",
+                "preserveNullAndEmptyArrays": True 
+            }
+        },
+        {
+            "$unwind": {
+                "path": "$location_details",
                 "preserveNullAndEmptyArrays": True 
             }
         },
@@ -128,6 +144,30 @@ async def getDetailProduct(db: AsyncIOMotorDatabase, slug: str):  # type: ignore
             return serialize_objectid(products[0])
     return None
 
+async def get_next_sequence(db: AsyncIOMotorDatabase, year: int, month: int) -> int:
+    counter_id = f"sku_{year}_{month:02d}" 
+
+    counter = await db.counters.find_one_and_update(
+        {"_id": counter_id},
+        {"$inc": {"seq": 1}},
+        upsert=True,
+        return_document=True
+    )
+
+    return counter["seq"]
+
+async def generate_sku(db: AsyncIOMotorDatabase) -> str:
+    prefix = "2CN"
+    now = datetime.now()
+    year = now.year
+    month = now.month 
+
+    sequence = await get_next_sequence(db, year, month)
+
+    sequence_str = f"{month:02d}{sequence}"
+
+    sku_code = f"{prefix}-{year}-{sequence_str}"
+    return sku_code
 
 async def addOneProduct(db : AsyncIOMotorDatabase, data : ProductForm )-> dict:  # type: ignore
     try:
@@ -139,6 +179,20 @@ async def addOneProduct(db : AsyncIOMotorDatabase, data : ProductForm )-> dict: 
         if (data.get("type")):
             data["type"] = ObjectId(data["type"])
 
+        if (data.get("location")):
+            data["location"] = ObjectId(data["location"])
+
+        if not data.get("sku_code"):
+            data["sku_code"] = await generate_sku(db)
+
+        data["status"] = 10
+
+        if (data.get("instagram")):
+            instagram_url = data["instagram"]
+            parsed_url = urlparse(instagram_url)
+            base_url = parsed_url._replace(query='').geturl()  # Remove query parameters
+            embed_url = base_url + 'embed'  # Add /embed at the end
+            data["instagram"] = embed_url
         res = await db.product.insert_one(data)
         print(res)
         return {"message":"success"}

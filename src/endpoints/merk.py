@@ -1,11 +1,13 @@
 from fastapi import APIRouter,Query, Depends
 from typing import List, Union
+from src.models.user import User
 from src.models.product import Merk
 from src.models.query_paramater import QueryParameter
 from motor.motor_asyncio import  AsyncIOMotorDatabase
 from src.database.mongo import getDB
 from src.models.response_model import PaginationResponse
 import src.services.merk as service
+import src.services.user as userService
 from bson import ObjectId
 
 router = APIRouter(prefix="/merk", tags=["Merks"])
@@ -45,6 +47,7 @@ async def getMerkDetail(
 async def createMerk(
     merk : Merk,
     db: AsyncIOMotorDatabase = Depends(getDB)):
+    current_user: User = Depends(userService.getCurrentUser),
     
     return await service.addOneMerks(db=db,data=merk)
 
@@ -54,6 +57,7 @@ async def createMerk(
 async def deleteMerk(
     id : str,
     db: AsyncIOMotorDatabase = Depends(getDB)):
+    current_user: User = Depends(userService.getCurrentUser),
     
     return await service.deleteOneMerks(db=db,id=id)
 
@@ -61,7 +65,8 @@ async def deleteMerk(
 async def updateMerk(
     id: str,
     merk: Merk,
-    db: AsyncIOMotorDatabase = Depends(getDB)
+    db: AsyncIOMotorDatabase = Depends(getDB),
+    current_user: User = Depends(userService.getCurrentUser)
 ):
     # Convert the string id to ObjectId
     object_id = ObjectId(id)

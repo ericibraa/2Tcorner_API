@@ -13,3 +13,4 @@ class Article(BaseModel):
     short_desc : str
     description: str
     author: str
+    status: int

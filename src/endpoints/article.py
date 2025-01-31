@@ -9,6 +9,8 @@ from src.database.mongo import getDB
 from src.models.response_model import PaginationResponse
 import src.services.article as service
 from bson import ObjectId
+from src.models.user import User
+import src.services.user as userService
 
 router = APIRouter(prefix="/articles", tags=["Article"])
 
@@ -43,6 +45,7 @@ async def getArticleDetail(
 async def createArticle(
     article : Article,
     db: AsyncIOMotorDatabase = Depends(getDB)):
+    current_user: User = Depends(userService.getCurrentUser),
 
     article_data = article.dict()
     
@@ -54,7 +57,8 @@ async def createArticle(
 async def updateArticle(
     id: str,
     article: Article,
-    db: AsyncIOMotorDatabase = Depends(getDB)
+    db: AsyncIOMotorDatabase = Depends(getDB),
+    current_user: User = Depends(userService.getCurrentUser),
 ):
     object_id = ObjectId(id)
 
@@ -69,5 +73,6 @@ async def updateArticle(
 async def deleteArticle(
     id : str,
     db: AsyncIOMotorDatabase = Depends(getDB)):
+    current_user: User = Depends(userService.getCurrentUser),
     
     return await service.deleteArticle(db=db,id=id)
