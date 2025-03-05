@@ -1,7 +1,7 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm
-from src.endpoints import user, product, merk, type, location, category, article
+from src.endpoints import user, product, merk, type, location, category, article, upload
 from motor.core import AgnosticDatabase
 from src.models.user import LoginData
 from src.models.response_model import LoginResponse
@@ -17,6 +17,8 @@ router.include_router(type.router)
 router.include_router(location.router)
 router.include_router(category.router)
 router.include_router(article.router)
+router.include_router(upload.router)
+
 
 @router.post("/token", response_description="Get Token", response_model=LoginResponse)
 async def getToken(

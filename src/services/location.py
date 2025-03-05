@@ -9,7 +9,7 @@ from src.models.response_model import Pagination, PaginationResponse
 from bson import ObjectId
 
 
-async def getAllLocation(db : AsyncIOMotorDatabase, query : QueryParameter ) -> PaginationResponse:
+async def getAllLocation(db : AsyncIOMotorDatabase, query : QueryParameter ) -> PaginationResponse: # type: ignore
     match = {}
     skip = 0
     if query.search :
@@ -24,7 +24,7 @@ async def getAllLocation(db : AsyncIOMotorDatabase, query : QueryParameter ) -> 
     
     return PaginationResponse(message="Location", status=200, data = res, pagination=Pagination(total_records=total_records, current_page=query.page))
 
-async def addOneLocation(db : AsyncIOMotorDatabase, data : Location )-> Location:
+async def addOneLocation(db : AsyncIOMotorDatabase, data : Location )-> Location: # type: ignore
     data = jsonable_encoder(data)
     if data.get('_id'):
         data['_id'] = ObjectId()
@@ -34,13 +34,13 @@ async def addOneLocation(db : AsyncIOMotorDatabase, data : Location )-> Location
     return str(res.inserted_id)
 
 
-async def deleteOneLocation(db : AsyncIOMotorDatabase, id : ObjectId ):
+async def deleteOneLocation(db : AsyncIOMotorDatabase, id : ObjectId ): # type: ignore
     res = await db.location.delete_one({"_id": ObjectId(id)})
     print(str(res.raw_result))
     return str(res.raw_result)
 
 
-async def updateOneLocation(db : AsyncIOMotorDatabase, id : ObjectId ,data=Location):
+async def updateOneLocation(db : AsyncIOMotorDatabase, id : ObjectId ,data=Location): # type: ignore
     try:
         data = jsonable_encoder(data)
         if data.get('_id') == 'False':
