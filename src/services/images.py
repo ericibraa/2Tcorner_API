@@ -6,9 +6,9 @@ from bson import ObjectId
 async def addImageToDB(db: AsyncIOMotorDatabase, data: Image): # type: ignore
     try:
         data_dict = jsonable_encoder(data)
-        
-        data_dict["_id"] = ObjectId()
 
+        data_dict.pop("_id", None)
+        
         res = await db.images.insert_one(data_dict)
 
         return str(res.inserted_id)

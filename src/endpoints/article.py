@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException,Query, Depends
 from typing import List, Union
 
 from slugify import slugify
-from src.models.article import Article
+from src.models.article import Article, ArticleForm
 from src.models.query_paramater import QueryParameter
 from motor.motor_asyncio import  AsyncIOMotorDatabase
 from src.database.mongo import getDB
@@ -17,7 +17,7 @@ router = APIRouter(prefix="/articles", tags=["Article"])
 articles = []
 @router.get("/", response_description="List Article", response_model= PaginationResponse)
 async def getArticles(
-    db: AsyncIOMotorDatabase = Depends(getDB),
+    db: AsyncIOMotorDatabase = Depends(getDB), # type: ignore
     limit :Union[int, None] = Query(default=None),
     page :Union[int, None]= Query(default=None),
     search : Union[str, None] = Query(default=None)
@@ -29,7 +29,7 @@ async def getArticles(
 @router.get("/{slug}", response_model=Article)
 async def getArticleDetail(
     slug: str,
-    db: AsyncIOMotorDatabase = Depends(getDB)
+    db: AsyncIOMotorDatabase = Depends(getDB) # type: ignore
 ):
     
     article = await db.article.find_one({"slug": slug})
@@ -43,21 +43,21 @@ async def getArticleDetail(
 
 @router.post("/")
 async def createArticle(
-    article : Article,
-    db: AsyncIOMotorDatabase = Depends(getDB)):
+    article : ArticleForm,
+    db: AsyncIOMotorDatabase = Depends(getDB)): # type: ignore
     current_user: User = Depends(userService.getCurrentUser),
 
     article_data = article.dict()
     
     article_data["slug"] = slugify(article.title) if not article.slug else article.slug
     
-    return await service.createArticle(db=db,data=article)
+    return await service.createArticle(db=db,data=article_data)
 
-@router.put("/{id}", response_model=Article)
+@router.put("/{id}", response_model=ArticleForm)
 async def updateArticle(
     id: str,
-    article: Article,
-    db: AsyncIOMotorDatabase = Depends(getDB),
+    article: ArticleForm,
+    db: AsyncIOMotorDatabase = Depends(getDB), # type: ignore
     current_user: User = Depends(userService.getCurrentUser),
 ):
     object_id = ObjectId(id)
@@ -72,7 +72,7 @@ async def updateArticle(
 @router.delete("/{id}")
 async def deleteArticle(
     id : str,
-    db: AsyncIOMotorDatabase = Depends(getDB)):
+    db: AsyncIOMotorDatabase = Depends(getDB)): # type: ignore
     current_user: User = Depends(userService.getCurrentUser),
     
     return await service.deleteArticle(db=db,id=id)

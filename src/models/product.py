@@ -1,6 +1,7 @@
 from pydantic import BaseModel, ConfigDict, Field
 
 from typing import Optional, List, Union
+from src.models.images import ImagesView
 from src.models.location import LocationDetail
 from src.models.brand import Brand
 from typing_extensions import Annotated
@@ -35,19 +36,20 @@ class TypeDetail(BaseModel):
     name: str
     
 class Product(BaseModel):
-    id : PydanticObjectId = Field(default=False,alias="_id")
+    id: PydanticObjectId = Field(default=False, alias="_id")
     name: str
     slug: str
     merk: PydanticObjectId
-    merk_details: Optional[MerkDetail] = None 
+    merk_details: Optional[MerkDetail] = None
     type: PydanticObjectId
     type_details: Optional[TypeDetail] = None
     category: str
     location: PydanticObjectId
     location_details: Optional[LocationDetail] = None
-    image : List[str]
+    image: List[str]
+    images_details: Optional[List[ImagesView]] = []  
     sku_code: str
-    price : Optional[Price] = None
+    price: Optional[Price] = None
     cc: str
     year: str
     grade: str
@@ -57,6 +59,7 @@ class Product(BaseModel):
     status: int
     instagram: Optional[str] = None
     youtube: Optional[str] = None
+
 
 class ProductForm(BaseModel):
     name: str
@@ -77,6 +80,5 @@ class ProductForm(BaseModel):
     status: Optional[int] = None
     instagram: Optional[str] = None
     youtube: Optional[str] = None
-
-    # model_config = ConfigDict(populate_by_name = True)
+    status: Optional[int] = None
 

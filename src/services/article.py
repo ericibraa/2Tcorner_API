@@ -1,16 +1,17 @@
+from datetime import datetime
 from fastapi import Body, Request, HTTPException, status
 from pydantic import TypeAdapter
 from typing  import List
 from fastapi.encoders import jsonable_encoder
-from src.models.article import Article
+from src.models.article import Article, ArticleForm
 from src.models.query_paramater import QueryParameter
 from motor.motor_asyncio import  AsyncIOMotorDatabase
 from src.models.response_model import Pagination, PaginationResponse
 from bson import ObjectId
 
 
-async def getAllArticles(db : AsyncIOMotorDatabase, query : QueryParameter ) -> PaginationResponse:
-    match = {"status": 10}
+async def getAllArticles(db : AsyncIOMotorDatabase, query : QueryParameter ) -> PaginationResponse: # type: ignore
+    match = {}
     skip = 0
     if query.search :
         match["title"] = query.search
@@ -25,19 +26,26 @@ async def getAllArticles(db : AsyncIOMotorDatabase, query : QueryParameter ) -> 
     
     return PaginationResponse(message="Articles", status=200, data = res, pagination=Pagination(total_records=total_records, current_page=query.page))
 
-async def createArticle(db : AsyncIOMotorDatabase, data : Article )-> Article:
+async def createArticle(db : AsyncIOMotorDatabase, data : ArticleForm )-> ArticleForm: # type: ignore
     try:
-        data = jsonable_encoder(data)
-        if data.get('_id'):
-            data['_id'] = ObjectId()
-        res = await db.article.insert_one(data)
+        data_dict = jsonable_encoder(data)
+
+        if data_dict.get('_id'):
+            data_dict['_id'] = ObjectId()
+
+        data_dict["created_at"] = datetime.utcnow()
+
+        if data_dict.get("status") is None:
+            data_dict["status"] = 10
+
+        res = await db.article.insert_one(data_dict)
         print(res)
         return {"message":"success"}
     except Exception as e:
         print(e)
         raise Exception(f"An error occurred while creating the article: {str(e)}")
 
-async def updateArticle(db: AsyncIOMotorDatabase, id: ObjectId, data: Article):
+async def updateArticle(db: AsyncIOMotorDatabase, id: ObjectId, data: ArticleForm): # type: ignore
     try:
         existing_article = await db.article.find_one({"_id": id})
         
@@ -60,7 +68,7 @@ async def updateArticle(db: AsyncIOMotorDatabase, id: ObjectId, data: Article):
         print(f"Error updating product: {str(e)}") 
         raise Exception(f"An error occurred while updating the article: {str(e)}")
 
-async def deleteArticle(db : AsyncIOMotorDatabase, id : ObjectId ):
+async def deleteArticle(db : AsyncIOMotorDatabase, id : ObjectId ): # type: ignore
     try:
         res = await db.article.delete_one({"_id": ObjectId(id)})
         print(str(res.raw_result))

@@ -1,3 +1,4 @@
+from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field
 
 from typing import Optional, List, Union
@@ -13,4 +14,18 @@ class Article(BaseModel):
     short_desc : str
     description: str
     author: str
-    status: int
+    status: Optional[int] = None
+    created_at: datetime = datetime.utcnow()
+    update_at: datetime = datetime.utcnow()
+
+class ArticleForm(BaseModel):
+    image: List[str] = None
+    title: str
+    slug: Optional[str] = None
+    short_desc : str
+    description: str
+    author: str
+    status: Optional[int] = None
+    created_at: datetime = datetime.utcnow()
+    update_at: datetime = datetime.utcnow()
+    status: Optional[int] = None

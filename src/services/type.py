@@ -9,7 +9,7 @@ from src.models.response_model import Pagination, PaginationResponse
 from bson import ObjectId
 
 
-async def getAllType(db : AsyncIOMotorDatabase, query : QueryParameter ) -> PaginationResponse:
+async def getAllType(db : AsyncIOMotorDatabase, query : QueryParameter ) -> PaginationResponse: # type: ignore
     match = {}
     skip = 0
     if query.search :
@@ -25,7 +25,7 @@ async def getAllType(db : AsyncIOMotorDatabase, query : QueryParameter ) -> Pagi
     
     return PaginationResponse(message="Type", status=200, data = res, pagination=Pagination(total_records=total_records, current_page=query.page))
 
-async def addOneType(db : AsyncIOMotorDatabase, data : Type )-> Type:
+async def addOneType(db : AsyncIOMotorDatabase, data : Type )-> Type: # type: ignore
     data = jsonable_encoder(data)
     if data.get('_id'):
         data['_id'] = ObjectId()
@@ -35,13 +35,13 @@ async def addOneType(db : AsyncIOMotorDatabase, data : Type )-> Type:
     return str(res.inserted_id)
 
 
-async def deleteOneType(db : AsyncIOMotorDatabase, id : ObjectId ):
+async def deleteOneType(db : AsyncIOMotorDatabase, id : ObjectId ): # type: ignore
     res = await db.type.delete_one({"_id": ObjectId(id)})
     print(str(res.raw_result))
     return str(res.raw_result)
 
 
-async def updateOneType(db : AsyncIOMotorDatabase, id : ObjectId ,data=Type):
+async def updateOneType(db : AsyncIOMotorDatabase, id : ObjectId ,data=Type): # type: ignore
     try:
         existing_type = await db.type.find_one({"_id": id})
         

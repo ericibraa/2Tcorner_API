@@ -65,17 +65,13 @@ async def createProduct(
 @router.put("/{id}", response_model=Product)
 async def updateProduct(
     id: str,
-    product: Product,
+    product: ProductForm,
     db: AsyncIOMotorDatabase = Depends(getDB),  # type: ignore
     current_user: User = Depends(userService.getCurrentUser),
 ):
     object_id = ObjectId(id)
-    product_data = product.dict()
 
-    if "name" in product_data:
-        product_data["slug"] = slugify(product_data["name"])
-    
-    update_product = await service.updateOneProduct(db=db, id=object_id, data=product_data)
+    update_product = await service.updateOneProduct(db=db, id=object_id, data=product)
     
     if update_product is None:
         raise HTTPException(status_code=404, detail="Product not found")

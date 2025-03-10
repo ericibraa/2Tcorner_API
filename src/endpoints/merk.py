@@ -29,16 +29,13 @@ async def getMerkDetail(
     id: str,
     db: AsyncIOMotorDatabase = Depends(getDB)
 ):
-    # Convert the string id to ObjectId
     object_id = ObjectId(id)
     
-    # Fetch the merk document by its ID
     merk = await db.merk.find_one({"_id": object_id})
     
     if not merk:
         raise HTTPException(status_code=404, detail="Merk not found")
     
-    # Convert _id to string before returning (Optional)
     merk["_id"] = str(merk["_id"])
     
     return merk
