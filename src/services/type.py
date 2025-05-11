@@ -51,9 +51,6 @@ async def updateOneType(db : AsyncIOMotorDatabase, id : ObjectId ,data=Type): # 
         data_dict = data.dict(exclude_unset=True) 
 
         result = await db.type.update_one({"_id": id}, {"$set": data_dict})
-
-        if result.modified_count == 0:
-            raise HTTPException(status_code=400, detail="No changes were made to the type.")
         
         updated_type = await db.type.find_one({"_id": id})
         

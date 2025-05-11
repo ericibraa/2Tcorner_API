@@ -11,7 +11,8 @@ async def upload_to_spaces(file, filename):
             aws_access_key_id=config.do_spaces_key,
             aws_secret_access_key=config.do_spaces_secret,
         )
-
+        print("===========================")
+        print(config.do_spaces_key)
         bucket_name = config.do_spaces_bucket
         object_name = f"uploads/{filename}"
 

@@ -239,8 +239,7 @@ async def addOneProduct(db : AsyncIOMotorDatabase, data : ProductForm )-> dict: 
         if not data.get("sku_code"):
             data["sku_code"] = await generate_sku(db)
 
-        if data.status == None:
-            data["status"] = 10
+        data["status"] = 10
 
         if (data.get("instagram")):
             instagram_url = data["instagram"]
