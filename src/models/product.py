@@ -39,12 +39,12 @@ class Product(BaseModel):
     id: PydanticObjectId = Field(default=False, alias="_id")
     name: str
     slug: str
-    merk: PydanticObjectId
+    merk: Optional[PydanticObjectId] = None
     merk_details: Optional[MerkDetail] = None
-    type: PydanticObjectId
+    type: Optional[PydanticObjectId] = None
     type_details: Optional[TypeDetail] = None
     category: str
-    location: PydanticObjectId
+    location: Optional[PydanticObjectId] = None
     location_details: Optional[LocationDetail] = None
     image: List[str]
     images_details: Optional[List[ImagesView]] = []  
@@ -59,7 +59,7 @@ class Product(BaseModel):
     status: int
     instagram: Optional[str] = None
     youtube: Optional[str] = None
-
+    code: str
 
 class ProductForm(BaseModel):
     name: str
@@ -81,4 +81,5 @@ class ProductForm(BaseModel):
     instagram: Optional[str] = None
     youtube: Optional[str] = None
     status: Optional[int] = None
+    code: str
 

@@ -28,7 +28,8 @@ class PydanticObjectId(str):
 
     @classmethod
     def validate(cls, value) -> ObjectId:
+        if value in ("", None, "null"):
+            return None
         if not ObjectId.is_valid(value):
             raise ValueError("Invalid ObjectId")
-
         return ObjectId(value)

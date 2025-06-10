@@ -44,17 +44,6 @@ async def getAllProducts(db: AsyncIOMotorDatabase, query: QueryParameter) -> Pag
     pipeline = [
         {"$match": match},
         {
-        "$addFields": {
-            "image": {
-                "$map": {
-                    "input": "$image",
-                    "as": "imgId",
-                    "in": { "$toObjectId": "$$imgId" }
-                }
-            }
-        }
-    },
-        {
             "$lookup": {
                 "from": "merk",
                 'localField': 'merk',
@@ -78,14 +67,6 @@ async def getAllProducts(db: AsyncIOMotorDatabase, query: QueryParameter) -> Pag
                 "as": "location_details"
             }
         },
-        {
-        "$lookup": {
-            "from": "images", 
-            "localField": "image",  
-            "foreignField": "_id", 
-            "as": "images_details" 
-        }
-    },
         {
             "$unwind": {
                 "path": "$merk_details",
@@ -130,17 +111,6 @@ async def getDetailProduct(db: AsyncIOMotorDatabase, slug: str):  # type: ignore
     pipeline = [
     {"$match": {"slug": slug}},
     {
-        "$addFields": {
-            "image": {
-                "$map": {
-                    "input": "$image",
-                    "as": "imgId",
-                    "in": { "$toObjectId": "$$imgId" }
-                }
-            }
-        }
-    },
-    {
         "$lookup": {
             "from": "merk",
             "localField": "merk",
@@ -162,14 +132,6 @@ async def getDetailProduct(db: AsyncIOMotorDatabase, slug: str):  # type: ignore
             "localField": "location",
             "foreignField": "_id",
             "as": "location_details"
-        }
-    },
-    {
-        "$lookup": {
-            "from": "images", 
-            "localField": "image",  
-            "foreignField": "_id", 
-            "as": "images_details" 
         }
     },
     {
@@ -238,6 +200,9 @@ async def addOneProduct(db : AsyncIOMotorDatabase, data : ProductForm )-> dict: 
 
         if not data.get("sku_code"):
             data["sku_code"] = await generate_sku(db)
+
+        if not data.get("code"):
+            data["code"] = data["sku_code"]
 
         data["status"] = 10
 
