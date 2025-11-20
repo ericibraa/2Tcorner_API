@@ -8,6 +8,7 @@ from src.models.query_paramater import QueryParameter
 from motor.motor_asyncio import  AsyncIOMotorDatabase
 from src.models.response_model import Pagination, PaginationResponse
 from bson import ObjectId
+from src.models.product import UpdateStatusModel
 
 
 async def getAllArticles(db : AsyncIOMotorDatabase, query : QueryParameter ) -> PaginationResponse: # type: ignore
@@ -15,9 +16,10 @@ async def getAllArticles(db : AsyncIOMotorDatabase, query : QueryParameter ) -> 
     skip = 0
     if query.search :
         match["title"] = query.search
-    
     if query.page:
         skip = (query.page -1) * query.limit
+    if query.status is not None:
+        match["status"] = query.status
         
     articles = await db.article.find(match).limit(query.limit).skip(skip).to_list(query.limit)
     total_records = await db.article.count_documents(match)
@@ -73,5 +75,22 @@ async def deleteArticle(db : AsyncIOMotorDatabase, id : ObjectId ): # type: igno
         res = await db.article.delete_one({"_id": ObjectId(id)})
         print(str(res.raw_result))
         return str(res.raw_result)
+    except Exception as e:
+        print(e)
+
+async def updateOneStatus(db : AsyncIOMotorDatabase, id : ObjectId, data : UpdateStatusModel): # type: ignore
+    try:
+        res = await db.article.update_one(
+            {"_id": id},
+            {"$set": {"status": data.status}}
+        )
+
+        if res.modified_count == 0:
+            raise HTTPException(status_code=404, detail="Article not found or status unchanged")
+
+        return {
+            "message": "Article status updated successfully",
+            "status": data.status
+        }
     except Exception as e:
         print(e)

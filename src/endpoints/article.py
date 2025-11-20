@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException,Query, Depends
 from typing import List, Union
 
 from slugify import slugify
+from src.models.product import UpdateStatusModel
 from src.models.article import Article, ArticleForm
 from src.models.query_paramater import QueryParameter
 from motor.motor_asyncio import  AsyncIOMotorDatabase
@@ -20,9 +21,10 @@ async def getArticles(
     db: AsyncIOMotorDatabase = Depends(getDB), # type: ignore
     limit :Union[int, None] = Query(default=None),
     page :Union[int, None]= Query(default=None),
-    search : Union[str, None] = Query(default=None)
+    search : Union[str, None] = Query(default=None),
+    status : Union[int, None] = Query(default=None)
 ):
-    query = QueryParameter(search=search, limit=limit, page=page )
+    query = QueryParameter(search=search, limit=limit, page=page, status=status )
     
     return await service.getAllArticles(db=db, query= query)
 
@@ -76,3 +78,20 @@ async def deleteArticle(
     current_user: User = Depends(userService.getCurrentUser),
     
     return await service.deleteArticle(db=db,id=id)
+
+@router.patch("/{id}/status")
+async def updateArticleStatus(
+    id: str,
+    body: UpdateStatusModel,
+    db: AsyncIOMotorDatabase = Depends(getDB)  # type: ignore
+
+):
+    object_id = ObjectId(id)
+
+    update_status = await service.updateOneStatus(db=db, id=object_id, data=body)
+
+    if update_status is None:
+        raise HTTPException(status_code=404, detail="Product not found")
+    
+    return update_status
+  

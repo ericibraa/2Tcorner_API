@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException,Query, Depends
 from typing import List, Union
 from src.models.user import User
-from src.models.product import Product, ProductForm
+from src.models.product import Product, ProductForm, UpdateStatusModel
 from src.models.query_paramater import QueryParameter
 from motor.motor_asyncio import  AsyncIOMotorDatabase
 from src.database.mongo import getDB
@@ -24,9 +24,11 @@ async def getProducts(
     years : Union[str, None] = Query(default=None),
     grade : Union[str, None] = Query(default=None),
     type: Union[str, None] = Query(default=None),
+    status: Union[int, None] = Query(default=None),
+    location: Union[str, None] = Query(default=None)
 ):
     
-    query = QueryParameter(search=search, limit=limit, page=page, machine=machine, cc=cc, years=years, grade=grade, type=type)
+    query = QueryParameter(search=search, limit=limit, page=page, machine=machine, cc=cc, years=years, grade=grade, type=type, status=status, location=location)
     
     products = await service.getAllProducts(db=db, query=query)
 
@@ -85,3 +87,20 @@ async def deleteProduct(
     current_user: User = Depends(userService.getCurrentUser),
     
     return await service.deleteOneProduct(db=db,id=id)
+
+@router.patch("/{id}/status")
+async def update_product_status(
+    id: str,
+    body: UpdateStatusModel,
+    db: AsyncIOMotorDatabase = Depends(getDB)  # type: ignore
+
+):
+    object_id = ObjectId(id)
+
+    update_status = await service.updateOneStatus(db=db, id=object_id, data=body)
+
+    if update_status is None:
+        raise HTTPException(status_code=404, detail="Product not found")
+    
+    return update_status
+  

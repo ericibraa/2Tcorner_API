@@ -1,7 +1,7 @@
 from pydantic import BaseModel, ConfigDict, Field
 
 from typing import Optional, List, Union
-from src.models.images import ImagesView
+from src.models.images import Image
 from src.models.location import LocationDetail
 from src.models.brand import Brand
 from typing_extensions import Annotated
@@ -46,8 +46,7 @@ class Product(BaseModel):
     category: str
     location: Optional[PydanticObjectId] = None
     location_details: Optional[LocationDetail] = None
-    image: List[str]
-    images_details: Optional[List[ImagesView]] = []  
+    image: Optional[List[str]] = []
     sku_code: str
     price: Optional[Price] = None
     cc: str
@@ -83,3 +82,5 @@ class ProductForm(BaseModel):
     status: Optional[int] = None
     code: str
 
+class UpdateStatusModel(BaseModel):
+    status: int

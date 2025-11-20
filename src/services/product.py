@@ -4,7 +4,7 @@ from pydantic import TypeAdapter
 from typing  import List
 from fastapi.encoders import jsonable_encoder
 from slugify import slugify
-from src.models.product import Product, ProductForm
+from src.models.product import Product, ProductForm, UpdateStatusModel
 from src.models.query_paramater import QueryParameter
 from motor.motor_asyncio import  AsyncIOMotorDatabase
 from src.models.response_model import Pagination, PaginationResponse
@@ -22,8 +22,9 @@ def serialize_objectid(value):
 
 
 async def getAllProducts(db: AsyncIOMotorDatabase, query: QueryParameter) -> PaginationResponse: # type: ignore
-    match = {"status": 10}
-    skip = 0
+    match = {}
+    if query.status is not None:
+        match["status"] = query.status
     if query.search:
         match["name"] = {"$regex": query.search, "$options": "i"}
     if query.machine:
@@ -36,6 +37,8 @@ async def getAllProducts(db: AsyncIOMotorDatabase, query: QueryParameter) -> Pag
         match["grade"] = {"$regex": query.grade, "$options": "i"}
     if query.type:
         match["type"] = query.type
+    if query.location:
+        match["location"] = query.location
 
     page = query.page or 1   
     limit = query.limit or 10
@@ -268,4 +271,19 @@ async def deleteOneProduct(db : AsyncIOMotorDatabase, id : ObjectId ):  # type: 
     except Exception as e:
         print(e)
 
+async def updateOneStatus(db : AsyncIOMotorDatabase, id : ObjectId, data : UpdateStatusModel): # type: ignore
+    try:
+        res = await db.product.update_one(
+            {"_id": id},
+            {"$set": {"status": data.status}}
+        )
 
+        if res.modified_count == 0:
+            raise HTTPException(status_code=404, detail="Product not found or status unchanged")
+
+        return {
+            "message": "Product status updated successfully",
+            "status": data.status
+        }
+    except Exception as e:
+        print(e)
